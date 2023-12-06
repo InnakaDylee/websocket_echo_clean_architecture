@@ -2,6 +2,8 @@ package websocket
 
 import (
 	"net/http"
+	"ws/config"
+	"ws/model"
 
 	"github.com/gorilla/websocket"
 	"github.com/labstack/echo/v4"
@@ -20,6 +22,7 @@ func NewHandler(h *Hub) *Handler {
 type CreateRoomReq struct {
 	ID   string `json:"id"`
 	Name string `json:"name"`
+	PhotoProfile string `json:"photo_profile"`
 }
 
 func (h *Handler) CreateRoom(c echo.Context) error {
@@ -28,12 +31,16 @@ func (h *Handler) CreateRoom(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, map[string]interface{}{
 			"error": "error binding request",
 		})
-		
 	}
-
-	h.hub.Rooms[req.ID] = &Room{
-		ID:      req.ID,
-		Name:    req.Name,
+	room := model.Rooms{
+		ID: req.ID,
+		Name: req.Name,
+		PhotoProfile: req.PhotoProfile,
+	}
+	config.DB.Create(&room)
+	h.hub.Rooms[room.ID] = &Room{
+		ID:      room.ID,
+		Name:    room.Name,
 		Client: make(map[string]*Client),
 	}
 
@@ -71,17 +78,11 @@ func (h *Handler) JoinRoom(c echo.Context) error {
 		RoomID:   roomID,
 		Username: username,
 	}
-
-	m := &Message{
-		Content:  "A new user has joined the room",
-		RoomID:   roomID,
-		Username: username,
-	}
+	
 
 	h.hub.Register <- cl
-	h.hub.Broadcast <- m
 
-	go cl.writeMessage()
+	go cl.writeMessage(roomID)
 	cl.readMessage(h.hub)
 
 	return nil
@@ -127,4 +128,12 @@ func (h *Handler) GetClients(c echo.Context) error {
 	}
 
 	return c.JSON(http.StatusOK, clients)
+}
+
+func (h *Handler) GetChats(c echo.Context) error {
+	roomID := c.Param("roomId")
+	var messages []model.Message
+	config.DB.Where("room_id = ?", roomID).Find(&messages)
+
+	return c.JSON(http.StatusOK, messages)
 }

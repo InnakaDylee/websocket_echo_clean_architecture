@@ -26,5 +26,6 @@ func InitRoute(handler *Handler) {
 	e.GET("/ws/joinRoom/:roomId", handler.JoinRoom)
 	e.GET("/ws/getRooms", handler.GetRooms)
 	e.GET("/ws/getClients/:roomId", handler.GetClients)
+	e.GET("/ws/GetChats/:roomId", handler.GetChats)
 	e.Logger.Fatal(e.Start(":8000"))
 }

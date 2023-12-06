@@ -1,24 +1,24 @@
 package websocket
 
 type Room struct {
-	ID   string   `gorm:"primaryKey" json:"id"`
-	Name string `json:"name"`
+	ID     string              `gorm:"primaryKey" json:"id"`
+	Name   string           `json:"name"`
 	Client map[string]*Client `gorm:"-" json:"clients"`
 }
 
 type Hub struct {
-	Rooms map[string]*Room `gorm:"-" json:"rooms"`
-	Register chan *Client
+	Rooms      map[string]*Room `gorm:"-" json:"rooms"`
+	Register   chan *Client
 	Unregister chan *Client
-	Broadcast chan *Message
+	Broadcast  chan *Message
 }
 
 func NewHub() *Hub {
 	return &Hub{
-		Rooms: make(map[string]*Room),
-		Register: make(chan *Client),
+		Rooms:      make(map[string]*Room),
+		Register:   make(chan *Client),
 		Unregister: make(chan *Client),
-		Broadcast: make(chan *Message),
+		Broadcast:  make(chan *Message),
 	}
 }
 
@@ -29,8 +29,8 @@ func (h *Hub) Run() {
 			room, ok := h.Rooms[client.RoomID]
 			if !ok {
 				room = &Room{
-					ID: client.ID,
-					Name: client.RoomID,
+					ID:     client.ID,
+					Name:   client.RoomID,
 					Client: make(map[string]*Client),
 				}
 				h.Rooms[client.RoomID] = room

@@ -1,7 +1,7 @@
 package config
 
 import (
-	"ws/websocket"
+	"ws/model"
 	"fmt"
 
 	"gorm.io/driver/mysql"
@@ -13,11 +13,11 @@ var DB *gorm.DB
 func ConnectDB() *gorm.DB {
 
 
-	dbUser := "root"
-	dbPass := ""
-	dbHost := "localhost"
-	dbPort := "3306"
-	dbName := "websocket"
+	dbUser := 
+	dbPass := 
+	dbHost := 
+	dbPort := 
+	dbName := 
 
 	dsn := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?charset=utf8mb4&parseTime=True&loc=Local",
 		dbUser, dbPass, dbHost, dbPort, dbName)
@@ -36,5 +36,5 @@ func ConnectDB() *gorm.DB {
 }
 
 func Migrate() {
-	DB.AutoMigrate(&websocket.User{})
+	DB.AutoMigrate(&model.User{}, &model.Rooms{}, &model.Message{})
 }

@@ -1,7 +1,11 @@
 package websocket
 
 import (
+	// "fmt"
+	"fmt"
 	"log"
+	"ws/config"
+	"ws/model"
 
 	"github.com/gorilla/websocket"
 )
@@ -20,17 +24,19 @@ type Message struct {
 	Username string `json:"username"`
 }
 
-func (c *Client) writeMessage() {
+func (c *Client) writeMessage(roomID string) {
 	defer func() {
 		c.Conn.Close()
 	}()
-
+	var messages []model.Message
+	config.DB.Where("room_id = ?", roomID).Find(&messages)
+	c.Conn.WriteJSON(messages)
 	for {
 		message, ok := <-c.Message
 		if !ok {
 			return
 		}
-
+		
 		c.Conn.WriteJSON(message)
 	}
 }
@@ -40,7 +46,7 @@ func (c *Client) readMessage(hub *Hub) {
 		hub.Unregister <- c
 		c.Conn.Close()
 	}()
-
+	//extract Token sender
 	for {
 		_, m, err := c.Conn.ReadMessage()
 		if err != nil {
@@ -54,7 +60,16 @@ func (c *Client) readMessage(hub *Hub) {
 			Content:  string(m),
 			RoomID:   c.RoomID,
 			Username: c.Username,
+			
 		}
+
+		message := model.Message{
+			RoomID: msg.RoomID,
+			Message: msg.Content,
+		}
+		fmt.Println(msg)
+
+		config.DB.Create(&message)
 
 		hub.Broadcast <- msg
 	}
